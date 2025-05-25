@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>포토카드 체크리스트</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+  .card { display: flex; align-items: center; margin-bottom: 10px; }
+  .card img { width: 60px; height: 90px; object-fit: cover; margin-right: 10px; }
+</style>
+</head>
+<body>
+  <h1>포토카드 리스트</h1>
+
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="카드 이름 검색"
+    oninput="renderCards()"
+    style="width: 100%; padding: 8px; margin-bottom: 10px;"
+  />
+
+  <label>
+    <input type="checkbox" id="filterOwned" onchange="renderCards()" />
+    보유한 카드만 보기
+  </label>
+
+  <div id="cardList" style="margin-top: 15px;"></div>
+
+  <h3>포토카드 추가하기</h3>
+  <input type="text" id="nameInput" placeholder="카드 이름" />
+  <input type="text" id="imgInput" placeholder="이미지 URL" />
+  <button onclick="addCard()">추가</button>
+
+<script>
+  const cardListEl = document.getElementById('cardList');
+
+  let cards = JSON.parse(localStorage.getItem('cards') || '[]');
+
+  function saveCards() {
+    localStorage.setItem('cards', JSON.stringify(cards));
+  }
+
+  function renderCards() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const filterOwned = document.getElementById('filterOwned').checked;
+
+    cardListEl.innerHTML = '';
+    cards.forEach((card, index) => {
+      if (filterOwned && !card.owned) return;
+      if (!card.name.toLowerCase().includes(searchTerm)) return;
+
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = card.owned;
+      checkbox.onchange = () => {
+        cards[index].owned = checkbox.checked;
+        saveCards();
+        renderCards();
+      };
+
+      const img = document.createElement('img');
+      img.src = card.img || 'https://via.placeholder.com/60x90?text=No+Image';
+
+      const name = document.createElement('span');
+      name.textContent = card.name;
+
+      cardEl.appendChild(checkbox);
+      cardEl.appendChild(img);
+      cardEl.appendChild(name);
+
+      cardListEl.appendChild(cardEl);
+    });
+  }
+
+  function addCard() {
+    const nameInput = document.getElementById('nameInput');
+    const imgInput = document.getElementById('imgInput');
+    if (!nameInput.value.trim()) {
+      alert('카드 이름을 입력하세요.');
+      return;
+    }
+
+    cards.push({ name: nameInput.value.trim(), img: imgInput.value.trim(), owned: false });
+    saveCards();
+    renderCards();
+
+    nameInput.value = '';
+    imgInput.value = '';
+  }
+
+  renderCards();
+</script>
+</body>
+</html>
